@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  api:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - MONGODB_URI=mongodb://mongo:27017/nest-api
+      - JWT_SECRET=${JWT_SECRET:-change-in-production}
+      - JWT_EXPIRES=7d
+      - JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET:-change-refresh-in-production}
+      - JWT_REFRESH_EXPIRES=7d
+    depends_on:
+      - mongo
+    restart: unless-stopped
+
+  mongo:
+    image: mongo:7
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    restart: unless-stopped
+
+volumes:
+  mongo_data:

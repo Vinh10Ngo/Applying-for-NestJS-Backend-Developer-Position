@@ -1,0 +1,201 @@
+{
+  "info": {
+    "name": "NestJS API - Xin việc",
+    "description": "Collection cho API NestJS (Auth, Users, Articles)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:3000/api/v1" },
+    { "key": "token", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 201 Created', function() { pm.response.to.have.status(201); });",
+                  "pm.test('Response có access_token', function() { var j = pm.response.json(); pm.expect(j).to.have.property('access_token'); });"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"123456\",\n  \"fullName\": \"Nguyen Van A\"\n}"
+            },
+            "url": "{{baseUrl}}/auth/register"
+          }
+        },
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 hoặc 201', function() { pm.expect(pm.response.code).to.be.oneOf([200, 201]); });",
+                  "var json = pm.response.json();",
+                  "if (json.access_token) { pm.collectionVariables.set('token', json.access_token); }",
+                  "pm.test('Response có access_token', function() { pm.expect(json).to.have.property('access_token'); });"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"123456\"\n}"
+            },
+            "url": "{{baseUrl}}/auth/login"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "item": [
+        {
+          "name": "Get Me (cần đăng nhập)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": "{{baseUrl}}/users/me"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Articles",
+      "item": [
+        {
+          "name": "Tạo bài viết (cần đăng nhập)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 201 Created - đã lưu DB', function() { pm.response.to.have.status(201); });",
+                  "pm.test('Article có _id và title', function() { var j = pm.response.json(); pm.expect(j).to.have.property('_id'); pm.expect(j).to.have.property('title'); });"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Bài viết đầu tiên\",\n  \"content\": \"Nội dung bài viết\",\n  \"published\": true\n}"
+            },
+            "url": "{{baseUrl}}/articles"
+          }
+        },
+        {
+          "name": "Danh sách bài viết",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/articles?page=1&limit=10&published=true",
+              "host": ["{{baseUrl}}"],
+              "path": ["articles"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "10" },
+                { "key": "published", "value": "true" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Chi tiết bài viết",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/articles/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["articles", ":id"],
+              "variable": [{ "key": "id", "value": "" }]
+            }
+          }
+        },
+        {
+          "name": "Cập nhật bài viết (cần đăng nhập)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 OK - đã cập nhật DB', function() { pm.response.to.have.status(200); });",
+                  "pm.test('Response có _id và title', function() { var j = pm.response.json(); pm.expect(j).to.have.property('_id'); pm.expect(j).to.have.property('title'); });"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Tiêu đề đã sửa\",\n  \"content\": \"Nội dung đã sửa\",\n  \"published\": false\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/articles/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["articles", ":id"],
+              "variable": [{ "key": "id", "value": "" }]
+            }
+          }
+        },
+        {
+          "name": "Xóa bài viết (cần đăng nhập)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 hoặc 204 - đã xóa trên DB', function() { pm.expect(pm.response.code).to.be.oneOf([200, 204]); });"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/articles/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["articles", ":id"],
+              "variable": [{ "key": "id", "value": "" }]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
