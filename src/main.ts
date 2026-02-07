@@ -7,7 +7,11 @@ import { AppModule } from './app.module';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  app.use(helmet());
+  app.use(
+    helmet({
+      contentSecurityPolicy: false, // Tắt CSP để Swagger UI chạy được trên Vercel
+    }),
+  );
   const frontendUrl = process.env.FRONTEND_URL;
   app.enableCors({
     origin: frontendUrl ? frontendUrl.split(',').map((o) => o.trim()) : true,
