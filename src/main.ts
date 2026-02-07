@@ -3,10 +3,39 @@ import { ValidationPipe } from '@nestjs/common';
 import { VersioningType } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { NestExpressApplication } from '@nestjs/platform-express';
-import * as express from 'express';
 import helmet from 'helmet';
-import { getAbsoluteFSPath } from 'swagger-ui-dist';
 import { AppModule } from './app.module';
+
+// CDN cho Swagger UI - fix lỗi path /api/docs/docs/ và MIME type trên Vercel
+const SWAGGER_CDN = 'https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.17.14';
+
+function getSwaggerHtml(): string {
+  return `<!DOCTYPE html>
+<html>
+<head>
+  <link rel="stylesheet" href="${SWAGGER_CDN}/swagger-ui.css">
+</head>
+<body>
+  <div id="swagger-ui"></div>
+  <script src="${SWAGGER_CDN}/swagger-ui-bundle.js"></script>
+  <script src="${SWAGGER_CDN}/swagger-ui-standalone-preset.js"></script>
+  <script>
+    window.onload = () => {
+      window.ui = SwaggerUIBundle({
+        url: '/api/docs-json',
+        dom_id: '#swagger-ui',
+        presets: [
+          SwaggerUIBundle.presets.apis,
+          SwaggerUIStandalonePreset
+        ],
+        layout: "StandaloneLayout",
+        persistAuthorization: true
+      });
+    };
+  </script>
+</body>
+</html>`;
+}
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
@@ -35,10 +64,6 @@ async function bootstrap() {
     defaultVersion: '1',
   });
 
-  // Serve swagger-ui-dist trước để fix trang trắng trên Vercel serverless
-  const swaggerUiPath = getAbsoluteFSPath();
-  app.use('/api/docs', express.static(swaggerUiPath, { index: false }));
-
   const config = new DocumentBuilder()
     .setTitle('NestJS API - Xin việc')
     .setDescription('API Auth, Users, Articles (base path: **/api/v1**). Các route có ổ khóa cần bấm **Authorize** và dán access_token.')
@@ -50,8 +75,20 @@ async function bootstrap() {
     )
     .build();
   const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api/docs', app, document, {
-    swaggerOptions: { persistAuthorization: true },
+
+  // Dùng custom HTML + CDN thay vì SwaggerModule.setup để fix lỗi /api/docs/docs/ trên Vercel
+  const httpAdapter = app.getHttpAdapter();
+  httpAdapter.get('/docs-json', (_req: unknown, res: { setHeader: (k: string, v: string) => void; json: (o: unknown) => void }) => {
+    res.setHeader('Content-Type', 'application/json');
+    res.json(document);
+  });
+  httpAdapter.get('/docs', (_req: unknown, res: { setHeader: (k: string, v: string) => void; send: (html: string) => void }) => {
+    res.setHeader('Content-Type', 'text/html');
+    res.send(getSwaggerHtml());
+  });
+  httpAdapter.get('/docs/', (_req: unknown, res: { setHeader: (k: string, v: string) => void; send: (html: string) => void }) => {
+    res.setHeader('Content-Type', 'text/html');
+    res.send(getSwaggerHtml());
   });
 
   await app.listen(process.env.PORT ?? 3000);
