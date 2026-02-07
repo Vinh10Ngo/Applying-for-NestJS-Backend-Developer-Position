@@ -2,11 +2,14 @@ import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { VersioningType } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { NestExpressApplication } from '@nestjs/platform-express';
+import * as express from 'express';
 import helmet from 'helmet';
+import { getAbsoluteFSPath } from 'swagger-ui-dist';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
   app.use(
     helmet({
       contentSecurityPolicy: false, // Tắt CSP để Swagger UI chạy được trên Vercel
@@ -31,6 +34,10 @@ async function bootstrap() {
     prefix: 'v',
     defaultVersion: '1',
   });
+
+  // Serve swagger-ui-dist trước để fix trang trắng trên Vercel serverless
+  const swaggerUiPath = getAbsoluteFSPath();
+  app.use('/api/docs', express.static(swaggerUiPath, { index: false }));
 
   const config = new DocumentBuilder()
     .setTitle('NestJS API - Xin việc')
