@@ -37,26 +37,53 @@ export class ArticlesController {
 
   @Get()
   @Public()
+  @ApiOperation({ summary: 'Danh sách bài viết (phân trang + tìm kiếm phía server)' })
   @ApiQuery({ name: 'page', required: false, type: Number, example: 1, description: 'Trang (mặc định 1)' })
   @ApiQuery({ name: 'limit', required: false, type: Number, example: 10, description: 'Số bài mỗi trang (tối đa 50, mặc định 10)' })
+  @ApiQuery({ name: 'search_term', required: false, type: String, description: 'Tìm trong title và content' })
+  @ApiQuery({ name: 'search', required: false, type: String, description: 'Alias của search_term (tương thích cũ)' })
   @ApiQuery({ name: 'published', required: false, enum: ['true', 'false'], description: 'Chỉ lấy bài đã xuất bản: true | false' })
-  @ApiQuery({ name: 'search', required: false, type: String, description: 'Tìm trong title và content (không dấu)' })
   @ApiQuery({ name: 'includeDeleted', required: false, enum: ['true', 'false'], description: 'true = bao gồm bài đã xóa mềm' })
   findAll(
     @Query('page') page?: number,
     @Query('limit') limit?: number,
-    @Query('published') published?: string,
+    @Query('search_term') searchTerm?: string,
     @Query('search') search?: string,
+    @Query('published') published?: string,
     @Query('includeDeleted') includeDeleted?: string,
   ) {
     const publishedOnly = published === 'true';
     const withDeleted = includeDeleted === 'true';
+    const term = (searchTerm ?? search ?? '').trim();
     return this.articlesService.findAll(
       Number(page) || 1,
       Math.min(Number(limit) || 10, 50),
       publishedOnly,
-      search,
+      term || undefined,
       withDeleted,
+    );
+  }
+
+  @Get('admin')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
+  @ApiOperation({ summary: 'Quản lý bài viết (Admin): tất cả bài, phân trang + tìm kiếm' })
+  @ApiQuery({ name: 'page', required: false, type: Number })
+  @ApiQuery({ name: 'limit', required: false, type: Number })
+  @ApiQuery({ name: 'search_term', required: false, type: String })
+  getAdminList(
+    @Query('page') page?: number,
+    @Query('limit') limit?: number,
+    @Query('search_term') searchTerm?: string,
+    @Query('search') search?: string,
+  ) {
+    const term = (searchTerm ?? search ?? '').trim();
+    return this.articlesService.findAll(
+      Number(page) || 1,
+      Math.min(Number(limit) || 10, 50),
+      false,
+      term || undefined,
+      true,
     );
   }
 
