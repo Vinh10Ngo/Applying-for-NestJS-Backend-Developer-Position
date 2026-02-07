@@ -74,6 +74,21 @@ Application is running on: http://localhost:3000
 
 ---
 
+## Tài khoản Admin (role admin)
+
+**Project không có sẵn nick admin mặc định.** Admin là user có `role: 'admin'` trong MongoDB.
+
+- **Nếu bạn đã từng đăng ký và chọn role admin:** dùng đúng **email + mật khẩu** đó để đăng nhập (POST `/api/v1/auth/login`). Nếu quên mật khẩu thì đổi trong MongoDB hoặc dùng API đổi mật khẩu khi đã đăng nhập.
+- **Tạo admin mới (dev):**  
+  - Cách 1: Đăng ký qua API với body có `"role": "admin"` (chỉ nên dùng trong dev):
+    ```json
+    POST /api/v1/auth/register
+    { "email": "admin@example.com", "password": "admin123", "role": "admin" }
+    ```
+  - Cách 2: Chạy script seed (tạo sẵn 1 admin): xem file **`scripts/seed-admin.js`** và chạy theo hướng dẫn trong đó.
+
+---
+
 ## Lỗi thường gặp
 
 | Lỗi | Cách xử lý |

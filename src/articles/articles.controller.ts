@@ -10,7 +10,7 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiQuery, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { ArticlesService } from './articles.service';
 import { CreateArticleDto } from './dto/create-article.dto';
 import { UpdateArticleDto } from './dto/update-article.dto';
@@ -58,6 +58,16 @@ export class ArticlesController {
       search,
       withDeleted,
     );
+  }
+
+  @Get('me')
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'Lấy danh sách bài viết của user đăng nhập' })
+  getMyArticles(
+    @CurrentUser('sub') userId: string,
+    @Query('includeDeleted') includeDeleted?: string,
+  ) {
+    return this.articlesService.findByAuthor(userId, includeDeleted === 'true');
   }
 
   @Get(':id')

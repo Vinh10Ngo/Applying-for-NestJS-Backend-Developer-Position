@@ -47,6 +47,17 @@ export class ArticlesService {
     return { items, total, page, limit, totalPages: Math.ceil(total / limit) };
   }
 
+  async findByAuthor(authorId: string, includeDeleted = false) {
+    const filter: Record<string, unknown> = { authorId: new Types.ObjectId(authorId) };
+    if (!includeDeleted) filter.deletedAt = null;
+    const items = await this.articleModel
+      .find(filter)
+      .populate('authorId', 'email fullName')
+      .sort({ createdAt: -1 })
+      .exec();
+    return { items, total: items.length };
+  }
+
   async findOne(id: string, includeDeleted = false): Promise<ArticleDocument> {
     const article = await this.articleModel
       .findById(id)
