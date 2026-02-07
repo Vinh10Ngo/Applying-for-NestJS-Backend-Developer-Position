@@ -49,6 +49,16 @@ export class UsersService {
     return this.userModel.find().select('-password').exec();
   }
 
+  async updateRole(userId: string, role: string): Promise<UserDocument> {
+    const user = await this.userModel.findById(userId).exec();
+    if (!user) throw new BadRequestException('User không tồn tại');
+    if (role !== 'admin' && role !== 'user') {
+      throw new BadRequestException('Vai trò phải là admin hoặc user');
+    }
+    user.role = role;
+    return user.save();
+  }
+
   async validatePassword(plain: string, hashed: string): Promise<boolean> {
     return bcrypt.compare(plain, hashed);
   }
