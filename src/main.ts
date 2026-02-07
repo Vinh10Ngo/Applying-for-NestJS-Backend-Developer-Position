@@ -77,16 +77,17 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
 
   // Dùng custom HTML + CDN thay vì SwaggerModule.setup để fix lỗi /api/docs/docs/ trên Vercel
+  // Dùng full path /api/docs vì getHttpAdapter() không áp dụng global prefix
   const httpAdapter = app.getHttpAdapter();
-  httpAdapter.get('/docs-json', (_req: unknown, res: { setHeader: (k: string, v: string) => void; json: (o: unknown) => void }) => {
+  httpAdapter.get('/api/docs-json', (_req: unknown, res: { setHeader: (k: string, v: string) => void; json: (o: unknown) => void }) => {
     res.setHeader('Content-Type', 'application/json');
     res.json(document);
   });
-  httpAdapter.get('/docs', (_req: unknown, res: { setHeader: (k: string, v: string) => void; send: (html: string) => void }) => {
+  httpAdapter.get('/api/docs', (_req: unknown, res: { setHeader: (k: string, v: string) => void; send: (html: string) => void }) => {
     res.setHeader('Content-Type', 'text/html');
     res.send(getSwaggerHtml());
   });
-  httpAdapter.get('/docs/', (_req: unknown, res: { setHeader: (k: string, v: string) => void; send: (html: string) => void }) => {
+  httpAdapter.get('/api/docs/', (_req: unknown, res: { setHeader: (k: string, v: string) => void; send: (html: string) => void }) => {
     res.setHeader('Content-Type', 'text/html');
     res.send(getSwaggerHtml());
   });
