@@ -1,0 +1,64 @@
+# Stress Test - NestJS API
+# Chạy: npm run stress-test
+# Đảm bảo API đang chạy tại http://localhost:3000
+
+config:
+  target: "http://localhost:3000"
+  phases:
+    # Phase 1: Warm-up - 30 giây, 5 req/s
+    - duration: 30
+      arrivalRate: 5
+      name: "Warm-up"
+    # Phase 2: Stress - 60 giây, tăng lên 20 req/s
+    - duration: 60
+      arrivalRate: 20
+      name: "Stress"
+    # Phase 3: Spike - 30 giây, 50 req/s (kiểm tra giới hạn)
+    - duration: 30
+      arrivalRate: 50
+      name: "Spike"
+  # Throttle: tối đa 100 req/phút theo API rate limit
+  # Artillery mặc định không giới hạn - server sẽ trả 429 nếu vượt
+  variables:
+    basePath: "/api/v1"
+
+scenarios:
+  # Health check - endpoint public, nhẹ nhất
+  - name: "Health Check"
+    weight: 2
+    flow:
+      - get:
+          url: "{{ basePath }}/health"
+          expect:
+            - statusCode: 200
+
+  # Danh sách articles - public, có query DB
+  - name: "Articles List"
+    weight: 3
+    flow:
+      - get:
+          url: "{{ basePath }}/articles?page=1&limit=10"
+          expect:
+            - statusCode: 200
+
+  # Chi tiết article - public (giả định có ID - dùng ID mẫu, có thể 404)
+  - name: "Article Detail"
+    weight: 2
+    flow:
+      - get:
+          url: "{{ basePath }}/articles/507f1f77bcf86cd799439011"
+          expect:
+            - statusCode: [200, 404]
+
+  # Login - test auth endpoint (cần user tồn tại)
+  # Sử dụng admin@example.com / admin123 nếu đã chạy: node scripts/seed-admin.js
+  - name: "Auth Login"
+    weight: 1
+    flow:
+      - post:
+          url: "{{ basePath }}/auth/login"
+          json:
+            email: "admin@example.com"
+            password: "admin123"
+          expect:
+            - statusCode: [200, 401]

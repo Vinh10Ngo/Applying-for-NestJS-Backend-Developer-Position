@@ -1,0 +1,20 @@
+# Quick Stress Test - ngắn gọn, chạy nhanh
+# Chạy: npm run stress-test:quick
+
+config:
+  target: "http://localhost:3000"
+  phases:
+    - duration: 20
+      arrivalRate: 15
+  variables:
+    basePath: "/api/v1"
+
+scenarios:
+  - name: "Health"
+    flow:
+      - get:
+          url: "{{ basePath }}/health"
+  - name: "Articles"
+    flow:
+      - get:
+          url: "{{ basePath }}/articles?page=1&limit=5"
