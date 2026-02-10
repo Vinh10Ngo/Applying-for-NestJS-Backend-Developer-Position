@@ -1,4 +1,4 @@
-import { Module } from "@nestjs/common";
+import { Module, NestModule, MiddlewareConsumer } from "@nestjs/common";
 import { ConfigModule, ConfigService } from "@nestjs/config";
 import { MongooseModule } from "@nestjs/mongoose";
 import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR } from "@nestjs/core";
@@ -12,6 +12,7 @@ import { JwtAuthGuard } from "./common/guards/jwt-auth.guard";
 import { LoggingInterceptor } from "./common/interceptors/logging.interceptor";
 import { AllExceptionsFilter } from "./common/filters/http-exception.filter";
 import { validateEnv } from "./common/config/env.validation";
+import { RequestIdMiddleware } from "./common/middleware/request-id.middleware";
 
 @Module({
   imports: [
@@ -37,4 +38,8 @@ import { validateEnv } from "./common/config/env.validation";
     { provide: APP_INTERCEPTOR, useClass: LoggingInterceptor },
   ],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(RequestIdMiddleware).forRoutes("*");
+  }
+}
