@@ -1,5 +1,5 @@
-import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document, Types } from 'mongoose';
+import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
+import { Document, Types } from "mongoose";
 
 export type ArticleDocument = Article & Document;
 
@@ -11,7 +11,7 @@ export class Article {
   @Prop()
   content: string;
 
-  @Prop({ type: Types.ObjectId, ref: 'User', required: true })
+  @Prop({ type: Types.ObjectId, ref: "User", required: true })
   authorId: Types.ObjectId;
 
   @Prop({ default: true })
@@ -24,3 +24,4 @@ export class Article {
 export const ArticleSchema = SchemaFactory.createForClass(Article);
 
 ArticleSchema.index({ authorId: 1, createdAt: -1 });
+ArticleSchema.index({ title: "text", content: "text" });
