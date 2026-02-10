@@ -1,5 +1,11 @@
-import { plainToInstance } from 'class-transformer';
-import { IsNumber, IsString, IsOptional, validateSync, Min } from 'class-validator';
+import { plainToInstance } from "class-transformer";
+import {
+  IsNumber,
+  IsString,
+  IsOptional,
+  validateSync,
+  Min,
+} from "class-validator";
 
 class EnvVariables {
   @IsOptional()
@@ -15,14 +21,14 @@ class EnvVariables {
 
   @IsOptional()
   @IsString()
-  JWT_EXPIRES?: string = '7d';
+  JWT_EXPIRES?: string = "7d";
 
   @IsString()
   JWT_REFRESH_SECRET!: string;
 
   @IsOptional()
   @IsString()
-  JWT_REFRESH_EXPIRES?: string = '7d';
+  JWT_REFRESH_EXPIRES?: string = "7d";
 }
 
 export function validateEnv(config: Record<string, unknown>) {
@@ -32,7 +38,9 @@ export function validateEnv(config: Record<string, unknown>) {
 
   const errors = validateSync(validated, { whitelist: true });
   if (errors.length > 0) {
-    const messages = errors.map((e) => Object.values(e.constraints ?? {}).join(', ')).join('; ');
+    const messages = errors
+      .map((e) => Object.values(e.constraints ?? {}).join(", "))
+      .join("; ");
     throw new Error(`Biến môi trường không hợp lệ: ${messages}`);
   }
 
